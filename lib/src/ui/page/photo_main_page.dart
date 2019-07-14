@@ -363,7 +363,9 @@ class _PhotoMainPageState extends State<PhotoMainPage>
   _buildMask(bool showMask) {
     return IgnorePointer(
       child: AnimatedContainer(
-        color: showMask ? Colors.black.withOpacity(0.5) : Colors.transparent,
+        color: showMask
+            ? const Color.fromRGBO(235, 235, 235, 0.6)
+            : Colors.transparent,
         duration: Duration(milliseconds: 300),
       ),
     );
