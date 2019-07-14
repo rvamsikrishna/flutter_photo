@@ -129,8 +129,8 @@ class PhotoPicker {
       var result = await showDialog(
         context: context,
         builder: (ctx) => NotPermissionDialog(
-              provider.getNotPermissionText(options),
-            ),
+          provider.getNotPermissionText(options),
+        ),
       );
       if (result == true) {
         PhotoManager.openSetting();
@@ -147,14 +147,21 @@ class PhotoPicker {
     I18nProvider provider,
     List<AssetPathEntity> photoList,
   ) async {
-    return Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (ctx) => PhotoApp(
-              options: options,
-              provider: provider,
-              photoList: photoList,
-            ),
-      ),
-    );
+    return Navigator.of(context).push(PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (BuildContext context, _, __) {
+              return PhotoApp(
+                options: options,
+                provider: provider,
+                photoList: photoList,
+              );
+            }) // MaterialPageRoute(
+        //   builder: (ctx) => PhotoApp(
+        //     options: options,
+        //     provider: provider,
+        //     photoList: photoList,
+        //   ),
+        // ),
+        );
   }
 }

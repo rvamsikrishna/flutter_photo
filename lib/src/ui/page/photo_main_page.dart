@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as prefix0;
 import 'package:photo/src/delegate/badge_delegate.dart';
 import 'package:photo/src/delegate/loading_delegate.dart';
 import 'package:photo/src/engine/lru_cache.dart';
@@ -12,7 +13,6 @@ import 'package:photo/src/provider/gallery_list_provider.dart';
 import 'package:photo/src/provider/i18n_provider.dart';
 import 'package:photo/src/provider/selected_provider.dart';
 import 'package:photo/src/ui/dialog/change_gallery_dialog.dart';
-import 'package:photo/src/ui/page/photo_preview_page.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 part './main/bottom_widget.dart';
@@ -35,7 +35,10 @@ class PhotoMainPage extends StatefulWidget {
 }
 
 class _PhotoMainPageState extends State<PhotoMainPage>
-    with SelectedProvider, GalleryListProvider {
+    with
+        SelectedProvider,
+        GalleryListProvider,
+        prefix0.SingleTickerProviderStateMixin {
   Options get options => widget.options;
 
   I18nProvider get i18nProvider => ConfigProvider.of(context).provider;
@@ -47,6 +50,12 @@ class _PhotoMainPageState extends State<PhotoMainPage>
   AssetPathEntity _currentPath = AssetPathEntity.all;
 
   bool _isInit = false;
+
+  final List<Tab> _tabs = [
+    Tab(text: 'Recent'),
+    Tab(text: 'Camera'),
+  ];
+  TabController _tabController;
 
   AssetPathEntity get currentPath {
     if (_currentPath == null) {
@@ -80,6 +89,23 @@ class _PhotoMainPageState extends State<PhotoMainPage>
     super.initState();
     _refreshList();
     scaffoldKey = GlobalKey();
+    _tabController = TabController(length: _tabs.length, vsync: this)
+      ..addListener(() {
+        if (_tabController.indexIsChanging) {
+          int currIndexindex = _tabController.index;
+
+          switch (currIndexindex) {
+            case 0:
+              _onGalleryChange(this.galleryPathList[0]);
+              break;
+            case 1:
+              _onGalleryChange(this.galleryPathList[1]);
+              break;
+          }
+          selectedList.clear();
+        }
+      });
+
     scrollController = ScrollController();
     _changeThrottle = Throttle(onCall: _onAssetChange);
     PhotoManager.addChangeCallback(_changeThrottle.call);
@@ -91,6 +117,8 @@ class _PhotoMainPageState extends State<PhotoMainPage>
     PhotoManager.removeChangeCallback(_changeThrottle.call);
     PhotoManager.stopChangeNotify();
     _changeThrottle.dispose();
+    scrollController.dispose();
+    _tabController.dispose();
     scaffoldKey = null;
     super.dispose();
   }
@@ -99,50 +127,83 @@ class _PhotoMainPageState extends State<PhotoMainPage>
   Widget build(BuildContext context) {
     var textStyle = TextStyle(
       color: options.textColor,
-      fontSize: 14.0,
+      fontSize: 18.0,
     );
     return Theme(
       data: Theme.of(context).copyWith(primaryColor: options.themeColor),
       child: DefaultTextStyle(
         style: textStyle,
         child: Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: Icon(
-                Icons.close,
-                color: options.textColor,
+          backgroundColor: Colors.black.withOpacity(0.5),
+          body: Column(
+            children: <Widget>[
+              prefix0.Container(
+                height: prefix0.MediaQuery.of(context).size.height / 3,
               ),
-              onPressed: _cancel,
-            ),
-            title: Text(
-              i18nProvider.getTitleText(options),
-              style: TextStyle(
-                color: options.textColor,
-              ),
-            ),
-            actions: <Widget>[
-              FlatButton(
-                splashColor: Colors.transparent,
-                child: Text(
-                  i18nProvider.getSureText(options, selectedCount),
-                  style: selectedCount == 0
-                      ? textStyle.copyWith(color: options.disableColor)
-                      : textStyle,
+              Expanded(
+                child: Container(
+                  padding: prefix0.EdgeInsets.symmetric(horizontal: 15.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30.0),
+                      topRight: Radius.circular(30.0),
+                    ),
+                  ),
+                  child: Column(
+                    children: <Widget>[
+                      prefix0.SizedBox(height: 15.0),
+                      prefix0.Row(
+                        mainAxisAlignment:
+                            prefix0.MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          IconButton(
+                            icon: Icon(
+                              Icons.close,
+                              color: options.textColor,
+                            ),
+                            onPressed: _cancel,
+                          ),
+                          FlatButton(
+                            splashColor: Colors.transparent,
+                            child: Text(
+                              'Done',
+                              style: selectedCount == 0
+                                  ? textStyle.copyWith(
+                                      color: options.disableColor)
+                                  : textStyle,
+                            ),
+                            onPressed: selectedCount == 0 ? null : sure,
+                          ),
+                        ],
+                      ),
+                      prefix0.SizedBox(height: 15.0),
+                      prefix0.TabBar(
+                        controller: _tabController,
+                        indicator: BoxDecoration(
+                          color: const Color.fromRGBO(216, 216, 216, 0.5),
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        indicatorColor: Colors.transparent,
+                        labelColor: Colors.black,
+                        unselectedLabelColor: Colors.black.withOpacity(0.3),
+                        tabs: _tabs,
+                      ),
+                      prefix0.SizedBox(height: 15.0),
+                      Expanded(
+                        child: prefix0.TabBarView(
+                          controller: _tabController,
+                          children: <Widget>[
+                            _buildBody(scrollController),
+                            _buildBody(scrollController),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                onPressed: selectedCount == 0 ? null : sure,
               ),
             ],
-          ),
-          body: _buildBody(),
-          bottomNavigationBar: _BottomWidget(
-            key: scaffoldKey,
-            provider: i18nProvider,
-            options: options,
-            galleryName: currentGalleryName,
-            onGalleryChange: _onGalleryChange,
-            onTapPreview: selectedList.isEmpty ? null : _onTapPreview,
-            selectedProvider: this,
-            galleryListProvider: this,
           ),
         ),
       ),
@@ -254,32 +315,34 @@ class _PhotoMainPageState extends State<PhotoMainPage>
     options?.sortDelegate?.assetDelegate?.sort(assetList);
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(ScrollController scrollController) {
     if (!_isInit) {
       return _buildLoading();
     }
 
-    return Container(
-      color: options.dividerColor,
-      child: GridView.builder(
-        controller: scrollController,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: options.rowCount,
-          childAspectRatio: options.itemRadio,
-          crossAxisSpacing: options.padding,
-          mainAxisSpacing: options.padding,
-        ),
-        itemBuilder: _buildItem,
-        itemCount: list.length,
+    return GridView.builder(
+      padding: prefix0.EdgeInsets.symmetric(vertical: 0.0, horizontal: 5.0),
+      controller: scrollController,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: options.rowCount,
+        childAspectRatio: options.itemRadio,
+        crossAxisSpacing: options.padding,
+        mainAxisSpacing: options.padding,
       ),
+      itemBuilder: _buildItem,
+      itemCount: list.length,
     );
   }
 
   Widget _buildItem(BuildContext context, int index) {
     var data = list[index];
+    var currentSelected = containsEntity(data);
+
     return RepaintBoundary(
       child: GestureDetector(
-        onTap: () => _onItemClick(data, index),
+        onTap: () {
+          changeCheck(!currentSelected, data);
+        },
         child: Stack(
           children: <Widget>[
             ImageItem(
@@ -307,18 +370,11 @@ class _PhotoMainPageState extends State<PhotoMainPage>
   }
 
   Widget _buildSelected(AssetEntity entity) {
-    var currentSelected = containsEntity(entity);
     return Positioned(
       right: 0.0,
       width: 36.0,
       height: 36.0,
-      child: GestureDetector(
-        onTap: () {
-          changeCheck(!currentSelected, entity);
-        },
-        behavior: HitTestBehavior.translucent,
-        child: _buildText(entity),
-      ),
+      child: _buildText(entity),
     );
   }
 
@@ -335,10 +391,11 @@ class _PhotoMainPageState extends State<PhotoMainPage>
           color: options.textColor,
         ),
       );
-      decoration = BoxDecoration(color: themeColor);
+      decoration =
+          BoxDecoration(color: themeColor, shape: prefix0.BoxShape.circle);
     } else {
       decoration = BoxDecoration(
-        borderRadius: BorderRadius.circular(1.0),
+        shape: prefix0.BoxShape.circle,
         border: Border.all(
           color: themeColor,
         ),
@@ -375,61 +432,6 @@ class _PhotoMainPageState extends State<PhotoMainPage>
       await checkPickImageEntity();
       setState(() {});
     });
-  }
-
-  void _onItemClick(AssetEntity data, int index) {
-    var result = new PhotoPreviewResult();
-    isPushed = true;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (ctx) {
-          return ConfigProvider(
-            provider: ConfigProvider.of(context).provider,
-            options: options,
-            child: PhotoPreviewPage(
-              selectedProvider: this,
-              list: List.of(list),
-              initIndex: index,
-              changeProviderOnCheckChange: true,
-              result: result,
-            ),
-          );
-        },
-      ),
-    ).then((v) {
-      if (handlePreviewResult(v)) {
-        Navigator.pop(context, v);
-        return;
-      }
-      isPushed = false;
-      setState(() {});
-    });
-  }
-
-  void _onTapPreview() async {
-    var result = new PhotoPreviewResult();
-    isPushed = true;
-    var v = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (ctx) => ConfigProvider(
-              provider: ConfigProvider.of(context).provider,
-              options: options,
-              child: PhotoPreviewPage(
-                selectedProvider: this,
-                list: List.of(selectedList),
-                changeProviderOnCheckChange: false,
-                result: result,
-              ),
-            ),
-      ),
-    );
-    if (handlePreviewResult(v)) {
-      // print(v);
-      Navigator.pop(context, v);
-      return;
-    }
-    isPushed = false;
-    compareAndRemoveEntities(result.previewSelectedList);
   }
 
   bool handlePreviewResult(List<AssetEntity> v) {

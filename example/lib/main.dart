@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:photo/photo.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-import './preview.dart';
-
 void main() => runApp(new MyApp());
 
 class MyApp extends StatelessWidget {
@@ -118,20 +116,20 @@ class _MyHomePageState extends State<MyHomePage> with LoadingDelegate {
       themeColor: Colors.green,
       // the title color and bottom color
 
-      textColor: Colors.white,
+      textColor: Colors.black,
       // text color
-      padding: 1.0,
+      padding: 5.0,
       // item padding
-      dividerColor: Colors.grey,
+      dividerColor: Colors.white,
       // divider color
       disableColor: Colors.grey.shade300,
       // the check box disable color
       itemRadio: 0.88,
       // the content item radio
-      maxSelected: 8,
+      maxSelected: 10,
       // max picker image count
       // provider: I18nProvider.english,
-      provider: I18nProvider.chinese,
+      provider: ENProvider(),
       // i18n provider ,default is chinese. , you can custom I18nProvider or use ENProvider()
       rowCount: 3,
       // item row count
@@ -147,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage> with LoadingDelegate {
       ),
       // default is DefaultCheckBoxBuilderDelegate ,or you make custom delegate to create checkbox
 
-      loadingDelegate: this,
+      loadingDelegate: Loading(),
       // if you want to build custom loading widget,extends LoadingDelegate, [see example/lib/main.dart]
 
       badgeDelegate: const DurationBadgeDelegate(),
@@ -170,10 +168,28 @@ class _MyHomePageState extends State<MyHomePage> with LoadingDelegate {
 
       List<AssetEntity> preview = [];
       preview.addAll(imgList);
-      Navigator.push(context,
-          MaterialPageRoute(builder: (_) => PreviewPage(list: preview)));
+      // Navigator.push(context,
+      //     MaterialPageRoute(builder: (_) => PreviewPage(list: preview)));
     }
     setState(() {});
+  }
+}
+
+class Loading extends LoadingDelegate {
+  @override
+  Widget buildBigImageLoading(
+      BuildContext context, AssetEntity entity, Color themeColor) {
+    return CircularProgressIndicator(
+      strokeWidth: 1.0,
+    );
+  }
+
+  @override
+  Widget buildPreviewLoading(
+      BuildContext context, AssetEntity entity, Color themeColor) {
+    return CircularProgressIndicator(
+      strokeWidth: 1.0,
+    );
   }
 }
 
