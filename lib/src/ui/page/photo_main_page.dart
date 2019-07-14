@@ -388,7 +388,7 @@ class _PhotoMainPageState extends State<PhotoMainPage>
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 12.0,
-          color: options.textColor,
+          color: Colors.white,
         ),
       );
       decoration =
