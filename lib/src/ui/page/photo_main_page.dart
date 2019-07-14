@@ -353,7 +353,7 @@ class _PhotoMainPageState extends State<PhotoMainPage>
               badgeDelegate: options.badgeDelegate,
             ),
             _buildMask(containsEntity(data)),
-            _buildSelected(data),
+            if (currentSelected) _buildSelected(data),
           ],
         ),
       ),
