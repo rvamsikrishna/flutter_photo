@@ -71,6 +71,7 @@ class PhotoPicker {
     Color textColor,
     Color disableColor,
     int thumbSize = 64,
+    AcceptBuilder acceptBuilder,
     I18nProvider provider = I18nProvider.chinese,
     SortDelegate sortDelegate,
     CheckBoxBuilderDelegate checkBoxBuilderDelegate,
@@ -101,6 +102,7 @@ class PhotoPicker {
       padding: padding,
       disableColor: disableColor,
       textColor: textColor,
+      acceptBuilder: acceptBuilder,
       themeColor: themeColor,
       thumbSize: thumbSize,
       sortDelegate: sortDelegate,
@@ -147,21 +149,14 @@ class PhotoPicker {
     I18nProvider provider,
     List<AssetPathEntity> photoList,
   ) async {
-    return Navigator.of(context).push(PageRouteBuilder(
-            opaque: false,
-            pageBuilder: (BuildContext context, _, __) {
-              return PhotoApp(
-                options: options,
-                provider: provider,
-                photoList: photoList,
-              );
-            }) // MaterialPageRoute(
-        //   builder: (ctx) => PhotoApp(
-        //     options: options,
-        //     provider: provider,
-        //     photoList: photoList,
-        //   ),
-        // ),
-        );
+    return Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => PhotoApp(
+          options: options,
+          provider: provider,
+          photoList: photoList,
+        ),
+      ),
+    ); // );
   }
 }

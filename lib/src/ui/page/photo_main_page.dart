@@ -7,6 +7,7 @@ import 'package:photo/src/delegate/badge_delegate.dart';
 import 'package:photo/src/delegate/loading_delegate.dart';
 import 'package:photo/src/engine/lru_cache.dart';
 import 'package:photo/src/engine/throttle.dart';
+import 'package:photo/src/engine/throttle.dart' as prefix1;
 import 'package:photo/src/entity/options.dart';
 import 'package:photo/src/provider/config_provider.dart';
 import 'package:photo/src/provider/gallery_list_provider.dart';
@@ -51,12 +52,6 @@ class _PhotoMainPageState extends State<PhotoMainPage>
 
   bool _isInit = false;
 
-  final List<Tab> _tabs = [
-    Tab(text: 'Recent'),
-    Tab(text: 'Camera'),
-  ];
-  TabController _tabController;
-
   AssetPathEntity get currentPath {
     if (_currentPath == null) {
       return null;
@@ -89,22 +84,6 @@ class _PhotoMainPageState extends State<PhotoMainPage>
     super.initState();
     _refreshList();
     scaffoldKey = GlobalKey();
-    _tabController = TabController(length: _tabs.length, vsync: this)
-      ..addListener(() {
-        if (_tabController.indexIsChanging) {
-          int currIndexindex = _tabController.index;
-
-          switch (currIndexindex) {
-            case 0:
-              _onGalleryChange(this.galleryPathList[0]);
-              break;
-            case 1:
-              _onGalleryChange(this.galleryPathList[1]);
-              break;
-          }
-          selectedList.clear();
-        }
-      });
 
     scrollController = ScrollController();
     _changeThrottle = Throttle(onCall: _onAssetChange);
@@ -118,7 +97,6 @@ class _PhotoMainPageState extends State<PhotoMainPage>
     PhotoManager.stopChangeNotify();
     _changeThrottle.dispose();
     scrollController.dispose();
-    _tabController.dispose();
     scaffoldKey = null;
     super.dispose();
   }
@@ -134,75 +112,35 @@ class _PhotoMainPageState extends State<PhotoMainPage>
       child: DefaultTextStyle(
         style: textStyle,
         child: Scaffold(
-          backgroundColor: Colors.black.withOpacity(0.5),
-          body: Column(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(
+                Icons.close,
+                color: options.textColor,
+              ),
+              onPressed: _cancel,
+            ),
+            title: Text(
+              'Gallery',
+              style: TextStyle(
+                color: options.textColor,
+              ),
+            ),
+            centerTitle: true,
+          ),
+          backgroundColor: options.dividerColor,
+          // backgroundColor: Colors.black.withOpacity(0.5),
+          body: prefix0.Stack(
             children: <Widget>[
-              prefix0.Container(
-                height: prefix0.MediaQuery.of(context).size.height / 3,
-              ),
-              Expanded(
-                child: Container(
-                  padding: prefix0.EdgeInsets.symmetric(horizontal: 15.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30.0),
-                      topRight: Radius.circular(30.0),
-                    ),
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      prefix0.SizedBox(height: 15.0),
-                      prefix0.Row(
-                        mainAxisAlignment:
-                            prefix0.MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              color: options.textColor,
-                            ),
-                            onPressed: _cancel,
-                          ),
-                          FlatButton(
-                            splashColor: Colors.transparent,
-                            child: Text(
-                              'Done',
-                              style: selectedCount == 0
-                                  ? textStyle.copyWith(
-                                      color: options.disableColor)
-                                  : textStyle,
-                            ),
-                            onPressed: selectedCount == 0 ? null : sure,
-                          ),
-                        ],
-                      ),
-                      prefix0.SizedBox(height: 15.0),
-                      prefix0.TabBar(
-                        controller: _tabController,
-                        indicator: BoxDecoration(
-                          color: const Color.fromRGBO(216, 216, 216, 0.5),
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        indicatorColor: Colors.transparent,
-                        labelColor: Colors.black,
-                        unselectedLabelColor: Colors.black.withOpacity(0.3),
-                        tabs: _tabs,
-                      ),
-                      prefix0.SizedBox(height: 15.0),
-                      Expanded(
-                        child: prefix0.TabBarView(
-                          controller: _tabController,
-                          children: <Widget>[
-                            _buildBody(scrollController),
-                            _buildBody(scrollController),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              _buildBody(scrollController),
+              prefix0.Align(
+                alignment: prefix0.Alignment.bottomCenter,
+                child: prefix0.Container(
+                  height: 75.0,
+                  alignment: Alignment.center,
+                  child: options.acceptBuilder(context, sure),
                 ),
-              ),
+              )
             ],
           ),
         ),

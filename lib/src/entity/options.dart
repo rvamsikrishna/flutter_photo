@@ -33,6 +33,8 @@ class Options {
 
   final PickType pickType;
 
+  final AcceptBuilder acceptBuilder;
+
   const Options({
     this.rowCount,
     this.maxSelected,
@@ -43,6 +45,7 @@ class Options {
     this.textColor,
     this.disableColor,
     this.thumbSize,
+    this.acceptBuilder,
     this.sortDelegate,
     this.checkBoxBuilderDelegate,
     this.loadingDelegate,
@@ -56,3 +59,5 @@ enum PickType {
   onlyImage,
   onlyVideo,
 }
+
+typedef AcceptBuilder(BuildContext context, VoidCallback done);

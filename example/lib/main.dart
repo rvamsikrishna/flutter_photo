@@ -116,9 +116,16 @@ class _MyHomePageState extends State<MyHomePage> with LoadingDelegate {
       themeColor: Colors.green,
       // the title color and bottom color
 
-      textColor: Colors.black,
+      textColor: Colors.white,
       // text color
       padding: 5.0,
+      acceptBuilder: (BuildContext context, VoidCallback done) {
+        return RaisedButton(
+          child: Text('Add'),
+          onPressed: done,
+        );
+      },
+
       // item padding
       dividerColor: Colors.white,
       // divider color
